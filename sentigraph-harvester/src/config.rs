@@ -1,22 +1,21 @@
-use serde::Deserialize;
+use std::env;
 
-#[derive(Deserialize, Debug)]
-pub struct AppConfig {
+pub struct Config {
     pub redis_url: String,
     pub binance_ws_url: String,
-    #[serde(default = "default_log_level")]
-    pub rust_log: String,
+    pub symbol: String,
 }
 
-fn default_log_level() -> String {
-    "info".to_string()
-}
-
-impl AppConfig {
-    pub fn load() -> Self {
+impl Config {
+    pub fn from_env() -> Self {
         dotenvy::dotenv().ok();
 
-        envy::from_env::<AppConfig>()
-            .expect("FATAL: Missing required environment variables.")
+        Self {
+            redis_url: env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
+            binance_ws_url: env::var("BINANCE_WS_URL").unwrap_or_else(|_| {
+                "wss://stream.binance.com:9443/stream?streams=btcusdt@aggTrade/btcusdt@depth20@100ms".to_string()
+            }),
+            symbol: env::var("SYMBOL").unwrap_or_else(|_| "btc".to_string()),
+        }
     }
 }

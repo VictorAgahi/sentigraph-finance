@@ -28,42 +28,50 @@ services:
     restart: always
 
   harvester-btc:
+    build:
+      context: ./sentigraph-harvester
     image: sentigraph-harvester
     container_name: sentigraph-harvester-btc
     environment:
       - REDIS_URL=redis://redis:6379
-      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=btcusdt@aggTrade/btcusdt@depth20@100ms
+      - BINANCE_WS_URL=wss://fstream.binance.com/stream?streams=btcusdt@ticker/btcusdt@depth20@100ms/btcusdt@forceOrder
       - SYMBOL=btc
-      - RUST_LOG=info
+      - RUST_LOG=debug
     depends_on:
       - redis
     restart: always
 
   harvester-eth:
+    build:
+      context: ./sentigraph-harvester
     image: sentigraph-harvester
     container_name: sentigraph-harvester-eth
     environment:
       - REDIS_URL=redis://redis:6379
-      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=ethusdt@aggTrade/ethusdt@depth20@100ms
+      - BINANCE_WS_URL=wss://fstream.binance.com/stream?streams=ethusdt@ticker/ethusdt@depth20@100ms/ethusdt@forceOrder
       - SYMBOL=eth
-      - RUST_LOG=info
+      - RUST_LOG=debug
     depends_on:
       - redis
     restart: always
 
   harvester-sol:
+    build:
+      context: ./sentigraph-harvester
     image: sentigraph-harvester
     container_name: sentigraph-harvester-sol
     environment:
       - REDIS_URL=redis://redis:6379
-      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=solusdt@aggTrade/solusdt@depth20@100ms
+      - BINANCE_WS_URL=wss://fstream.binance.com/stream?streams=solusdt@ticker/solusdt@depth20@100ms/solusdt@forceOrder
       - SYMBOL=sol
-      - RUST_LOG=info
+      - RUST_LOG=debug
     depends_on:
       - redis
     restart: always
 
   analyst:
+    build:
+      context: ./sentigraph-analyst
     image: sentigraph-analyst
     container_name: sentigraph-analyst
     ports:
@@ -80,6 +88,8 @@ services:
     restart: always
 
   scout:
+    build:
+      context: ./sentigraph-scout
     image: sentigraph-scout
     container_name: sentigraph-scout
     environment:
@@ -89,6 +99,8 @@ services:
     restart: always
 
   dashboard:
+    build:
+      context: ./sentigraph-dashboard
     image: sentigraph-dashboard
     container_name: sentigraph-dashboard
     ports:

@@ -1,0 +1,36 @@
+name: Verify Builds
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-analyst:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Analyst
+        run: docker build -t sentigraph-analyst ./sentigraph-analyst
+
+  build-scout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Scout
+        run: docker build -t sentigraph-scout ./sentigraph-scout
+
+  build-harvester:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Harvester
+        run: docker build -t sentigraph-harvester ./sentigraph-harvester
+
+  build-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Dashboard
+        run: docker build -t sentigraph-dashboard ./sentigraph-dashboard
