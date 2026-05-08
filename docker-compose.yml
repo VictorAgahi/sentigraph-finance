@@ -1,29 +1,55 @@
+version: '3.8'
+
 services:
   redis:
-    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    image: ghcr.io/dragonflydb/dragonfly
     container_name: sentigraph-dragonfly
-    ulimits:
-      memlock: -1
     ports:
       - "6379:6379"
-    command: ["--logtostderr"]
     restart: always
 
   timescale:
-    image: 'timescale/timescaledb-ha:pg15'
+    image: timescale/timescaledb-ha:pg15
     container_name: sentigraph-timescale
     environment:
       - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
     restart: always
 
-  harvester:
+  harvester-btc:
     image: sentigraph-harvester
-    container_name: sentigraph-harvester
+    container_name: sentigraph-harvester-btc
     environment:
       - REDIS_URL=redis://redis:6379
-      - BINANCE_WS_URL=wss://stream.binance.com:9443/ws/btcusdt@aggTrade
+      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=btcusdt@aggTrade/btcusdt@depth20@100ms
+      - SYMBOL=btc
+      - RUST_LOG=info
+    depends_on:
+      - redis
+    restart: always
+
+  harvester-eth:
+    image: sentigraph-harvester
+    container_name: sentigraph-harvester-eth
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=ethusdt@aggTrade/ethusdt@depth20@100ms
+      - SYMBOL=eth
+      - RUST_LOG=info
+    depends_on:
+      - redis
+    restart: always
+
+  harvester-sol:
+    image: sentigraph-harvester
+    container_name: sentigraph-harvester-sol
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - BINANCE_WS_URL=wss://stream.binance.com:9443/stream?streams=solusdt@aggTrade/solusdt@depth20@100ms
+      - SYMBOL=sol
       - RUST_LOG=info
     depends_on:
       - redis
@@ -36,7 +62,7 @@ services:
       - "8080:8080"
     environment:
       - REDIS_URL=redis:6379
-      - OLLAMA_URL=http://192.168.10.114:11434/api/generate
+      - OLLAMA_URL=${OLLAMA_URL}
       - DATABASE_URL=postgres://postgres:password@timescale:5432/postgres
       - PORT=8080
     depends_on:
@@ -46,11 +72,21 @@ services:
       - "host.docker.internal:host-gateway"
     restart: always
 
+  scout:
+    image: sentigraph-scout
+    container_name: sentigraph-scout
+    environment:
+      - REDIS_URL=redis:6379
+    depends_on:
+      - redis
+    restart: always
+
   dashboard:
     image: sentigraph-dashboard
     container_name: sentigraph-dashboard
     ports:
       - "3000:3000"
-    depends_on:
-      - analyst
     restart: always
+
+volumes:
+  timescale_data:
