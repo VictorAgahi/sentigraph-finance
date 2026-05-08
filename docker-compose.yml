@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    container_name: sentigraph-dragonfly
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    command: ["--logtostderr"]
+    restart: always
+
+  timescale:
+    image: 'timescale/timescaledb-ha:pg15'
+    container_name: sentigraph-timescale
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    restart: always
+
+  harvester:
+    image: sentigraph-harvester
+    container_name: sentigraph-harvester
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - BINANCE_WS_URL=wss://stream.binance.com:9443/ws/btcusdt@aggTrade
+      - RUST_LOG=info
+    depends_on:
+      - redis
+    restart: always
+
+  analyst:
+    image: sentigraph-analyst
+    container_name: sentigraph-analyst
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_URL=redis:6379
+      - OLLAMA_URL=http://192.168.10.114:11434/api/generate
+      - DATABASE_URL=postgres://postgres:password@timescale:5432/postgres
+      - PORT=8080
+    depends_on:
+      - redis
+      - timescale
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
+  dashboard:
+    image: sentigraph-dashboard
+    container_name: sentigraph-dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - analyst
+    restart: always
