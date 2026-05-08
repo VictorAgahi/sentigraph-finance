@@ -19,6 +19,14 @@ services:
       - timescale_data:/var/lib/postgresql/data
     restart: always
 
+  ollama-bridge:
+    image: alpine/socat
+    container_name: sentigraph-ollama-bridge
+    command: tcp-listen:11434,fork,reuseaddr tcp:host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
   harvester-btc:
     image: sentigraph-harvester
     container_name: sentigraph-harvester-btc
@@ -62,14 +70,13 @@ services:
       - "8080:8080"
     environment:
       - REDIS_URL=redis:6379
-      - OLLAMA_URL=${OLLAMA_URL}
+      - OLLAMA_URL=http://ollama-bridge:11434/api/generate
       - DATABASE_URL=postgres://postgres:password@timescale:5432/postgres
       - PORT=8080
     depends_on:
       - redis
       - timescale
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - ollama-bridge
     restart: always
 
   scout:
